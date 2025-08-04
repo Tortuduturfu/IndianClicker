@@ -1,37 +1,5 @@
-// Types pour les thèmes
-export type Theme = 
-  | 'dark' 
-  | 'light' 
-  | 'neon' 
-  | 'forest' 
-  | 'ocean' 
-  | 'sunset' 
-  | 'cyberpunk' 
-  | 'retro';
+export type Tab = 'travail' | 'casino' | 'station-service' | 'collection' | 'achievements';
 
-// Interface pour les paramètres du jeu
-export interface GameSettings {
-  theme: Theme;
-  soundVolume: number; // 0-100
-  musicVolume?: number; // 0-100 (optionnel pour l'instant)
-}
-
-// Interface pour les cartes (casino)
-export interface Card {
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-  value: number; // 1-13 (1 = As, 11 = Valet, 12 = Dame, 13 = Roi)
-  display: string; // 'A', '2', '3', ..., 'J', 'Q', 'K'
-}
-
-// Interface pour les mains de blackjack
-export interface BlackjackHand {
-  cards: Card[];
-  value: number;
-  isBlackjack: boolean;
-  isBust: boolean;
-}
-
-// Interface pour les monstres
 export interface Monster {
   id: string;
   name: string;
@@ -39,11 +7,10 @@ export interface Monster {
   basePrice: number;
   currentPrice: number;
   multiplier: number;
-  obtained: number;
   image: string;
+  obtained: number;
 }
 
-// Interface pour les Guillaume
 export interface Guillaume {
   id: string;
   name: string;
@@ -54,51 +21,47 @@ export interface Guillaume {
   owned: number;
 }
 
-// Interface pour les achievements
+export interface GameState {
+  rupees: number;
+  totalClicks: number;
+  clickPower: number;
+  guillaumes: Guillaume[];
+  monstersCollection: Monster[];
+  currentBuilding: number; // 0: carton, 1-5: évolution vers villa
+  scratchTickets: number; // Nombre de tickets à gratter possédés
+  achievements: Achievement[];
+  totalMoneyEarned: number;
+  totalTicketsScratched: number;
+  totalCasinoWins: number;
+  totalCasinoLosses: number;
+  totalCasinoBet: number;
+  biggestWin: number;
+  blackjackWins: number;
+  rouletteWins: number;
+  slotWins: number;
+}
+
+
 export interface Achievement {
   id: string;
   name: string;
   description: string;
   icon: string;
-  isUnlocked: boolean;
   isHidden: boolean;
-  condition: (state: GameState) => boolean;
-  reward?: number;
+  isUnlocked: boolean;
+  condition: (gameState: GameState) => boolean;
+  reward?: number; // Bonus rupees when unlocked
 }
 
-// Types pour les onglets
-export type Tab = 'travail' | 'casino' | 'station-service' | 'collection' | 'achievements';
+export interface Card {
+  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+  value: number; // 1-13 (1=Ace, 11=Jack, 12=Queen, 13=King)
+  display: string;
+}
 
-// Interface principale pour l'état du jeu
-export interface GameState {
-  // Ressources
-  rupees: number;
-  totalClicks: number;
-  clickPower: number;
-  maxClickPower: number;
-  
-  // Collections
-  guillaumes: Guillaume[];
-  monstersCollection: Monster[];
-  achievements: Achievement[];
-  
-  // Progression
-  currentBuilding: number;
-  scratchTickets: number;
-  
-  // Statistiques
-  totalMoneyEarned: number;
-  totalTicketsScratched: number;
-  totalCasinoWins: number;
-  totalCasinoLosses: number;
-  totalCasinoBet?: number;
-  biggestWin?: number;
-  
-  // Statistiques spécifiques aux jeux de casino
-  blackjackWins?: number;
-  rouletteWins?: number;
-  slotWins?: number;
-  
-  // Paramètres
-  settings: GameSettings;
+export interface BlackjackHand {
+  cards: Card[];
+  value: number;
+  isBlackjack: boolean;
+  isBust: boolean;
 }
