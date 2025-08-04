@@ -11,7 +11,7 @@ const RARITY_CHANCES = {
 
 // Configuration du prix progressif
 const PRICE_CONFIG = {
-  basePrice: 500,           // Prix de base d'un ticket
+  basePrice: 200,           // Prix de base d'un ticket
   priceIncrease: 50,        // Augmentation par achat
   maxPriceMultiplier: 5     // Prix maximum = basePrice * maxPriceMultiplier
 };
