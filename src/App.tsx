@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Tab, GameState, Monster } from './types/game';
+import { Tab, GameState, Monster, Achievement } from './types/game';
 import { monstersData } from './data/monsters';
 import { guillaumesData } from './data/guillaumes';
 import { achievementsData } from './data/achievements';
@@ -11,23 +11,26 @@ import Collection from './components/Collection';
 import Achievements from './components/Achievements';
 import Settings from './components/Settings';
 import ScratchTicket from './components/ScratchTicket';
+import AchievementNotification from './components/AchievementNotification';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('travail');
+  const [activeTab, setActiveTab] = useState<Tab | 'settings'>('travail');
   const [showScratchTicket, setShowScratchTicket] = useState(false);
   const [currentTicketMonster, setCurrentTicketMonster] = useState<Monster | null>(null);
-  
+  const [achievementNotification, setAchievementNotification] = useState<Achievement | null>(null);
   const [gameState, setGameState] = useState<GameState>(() => {
     try {
       const saved = localStorage.getItem('indian-clicker-save');
       if (saved) {
         const parsedState = JSON.parse(saved);
         
+        // Validate that critical arrays exist and are arrays
         if (parsedState && 
             Array.isArray(parsedState.guillaumes) &&
             Array.isArray(parsedState.monstersCollection) &&
             Array.isArray(parsedState.achievements)) {
           
+          // Restore achievement condition functions from achievementsData
           const restoredAchievements = achievementsData.map(originalAchievement => {
             const savedAchievement = parsedState.achievements.find(
               (saved: any) => saved.id === originalAchievement.id
@@ -38,25 +41,17 @@ function App() {
             };
           });
           
-          // Assurer la présence des settings
-          const settings = parsedState.settings || {
-            theme: 'dark',
-            soundVolume: 50
-          };
-          
-          return {
-            ...parsedState,
-            achievements: restoredAchievements,
-            settings,
-            maxClickPower: parsedState.maxClickPower || parsedState.clickPower || 1
-          };
+          parsedState.achievements = restoredAchievements;
+          return parsedState;
         }
       }
     } catch (error) {
       console.warn('Failed to load saved game state, starting fresh:', error);
+      // Clear corrupted save data
       localStorage.removeItem('indian-clicker-save');
     }
     
+    // Return default state if loading failed or data is invalid
     return {
       rupees: 10,
       totalClicks: 0,
@@ -78,53 +73,18 @@ function App() {
       slotWins: 0,
       settings: {
         theme: 'dark',
-        soundVolume: 50
+        soundVolume: 50,
+        musicVolume: 30
       }
     };
   });
-
-  // Appliquer le thème au chargement
-  useEffect(() => {
-    applyTheme(gameState.settings.theme);
-  }, [gameState.settings.theme]);
-
-  const applyTheme = (theme: string) => {
-    if (typeof document === 'undefined') return;
-    
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.className = `theme-${theme}`;
-    
-    const root = document.documentElement;
-    
-    switch(theme) {
-      case 'dark':
-        root.style.setProperty('--bg-primary', '#1a1a2e');
-        root.style.setProperty('--bg-secondary', '#16213e');
-        root.style.setProperty('--text-primary', '#ffffff');
-        root.style.setProperty('--accent', '#3b82f6');
-        break;
-      case 'light':
-        root.style.setProperty('--bg-primary', '#ffffff');
-        root.style.setProperty('--bg-secondary', '#f8fafc');
-        root.style.setProperty('--text-primary', '#1e293b');
-        root.style.setProperty('--accent', '#3b82f6');
-        break;
-      case 'neon':
-        root.style.setProperty('--bg-primary', '#0a0a0f');
-        root.style.setProperty('--bg-secondary', '#1a0d2e');
-        root.style.setProperty('--text-primary', '#ffffff');
-        root.style.setProperty('--accent', '#f59e0b');
-        break;
-      // Ajoutez les autres thèmes...
-    }
-  };
 
   // Sauvegarde automatique
   useEffect(() => {
     localStorage.setItem('indian-clicker-save', JSON.stringify(gameState));
   }, [gameState]);
 
-  // Calcul du niveau de bâtiment
+  // Calcul du niveau de bâtiment basé sur les roupies
   useEffect(() => {
     let newBuilding = 0;
     if (gameState.rupees >= 50000) newBuilding = 5;
@@ -163,7 +123,8 @@ function App() {
       ...prev,
       rupees: prev.rupees + prev.clickPower,
       totalClicks: prev.totalClicks + 1,
-      totalMoneyEarned: prev.totalMoneyEarned + prev.clickPower
+      totalMoneyEarned: prev.totalMoneyEarned + prev.clickPower,
+      maxClickPower: Math.max(prev.maxClickPower, prev.clickPower)
     }));
   };
 
@@ -178,42 +139,6 @@ function App() {
   const updateStats = (stats: Partial<GameState>) => {
     setGameState(prev => ({ ...prev, ...stats }));
   };
-
-  const updateSettings = (newSettings: Partial<GameState['settings']>) => {
-    setGameState(prev => ({
-      ...prev,
-      settings: { ...prev.settings, ...newSettings }
-    }));
-  };
-
-  const resetGame = () => {
-    localStorage.removeItem('indian-clicker-save');
-    setGameState({
-      rupees: 10,
-      totalClicks: 0,
-      clickPower: 1,
-      maxClickPower: 1,
-      guillaumes: guillaumesData.map(g => ({ ...g, currentPrice: g.basePrice, owned: 0 })),
-      monstersCollection: monstersData.map(m => ({ ...m, currentPrice: m.basePrice, obtained: 0 })),
-      currentBuilding: 0,
-      scratchTickets: 0,
-      achievements: achievementsData.map(a => ({ ...a, isUnlocked: false })),
-      totalMoneyEarned: 0,
-      totalTicketsScratched: 0,
-      totalCasinoWins: 0,
-      totalCasinoLosses: 0,
-      totalCasinoBet: 0,
-      biggestWin: 0,
-      blackjackWins: 0,
-      rouletteWins: 0,
-      slotWins: 0,
-      settings: {
-        theme: 'dark',
-        soundVolume: 50
-      }
-    });
-  };
-
   const buyTicket = () => {
     if (gameState.rupees >= TICKET_PRICE) {
       setGameState(prev => ({
@@ -222,6 +147,7 @@ function App() {
         scratchTickets: prev.scratchTickets + 1
       }));
       
+      // Générer un monster aléatoire pour le ticket
       const randomMonster = generateRandomMonster();
       setCurrentTicketMonster(randomMonster);
       setShowScratchTicket(true);
@@ -248,6 +174,7 @@ function App() {
       };
     });
 
+    // Check for achievements after ticket reveal
     checkAchievements();
   };
 
@@ -267,7 +194,7 @@ function App() {
             ? { 
                 ...g, 
                 owned: g.owned + 1,
-                currentPrice: Math.floor(g.currentPrice * 1.2)
+                currentPrice: Math.floor(g.currentPrice * 1.2) // Prix augmente de 20%
               }
             : g
         )
@@ -275,10 +202,15 @@ function App() {
     }
   };
 
+  // Check achievements
   const checkAchievements = () => {
     setGameState(prev => {
       const updatedAchievements = prev.achievements.map(achievement => {
         if (!achievement.isUnlocked && achievement.condition(prev)) {
+          // Show notification
+          setAchievementNotification(achievement);
+          
+          // Award bonus rupees for unlocking achievement
           if (achievement.reward) {
             setTimeout(() => {
               setGameState(current => ({
@@ -300,9 +232,22 @@ function App() {
     });
   };
 
+  // Check achievements on game state changes
   React.useEffect(() => {
     checkAchievements();
-  }, [gameState.totalClicks, gameState.rupees, gameState.totalMoneyEarned, gameState.currentBuilding]);
+  }, [gameState.totalClicks, gameState.rupees, gameState.totalMoneyEarned, gameState.currentBuilding, gameState.maxClickPower]);
+
+  const updateSettings = (newSettings: Partial<GameState['settings']>) => {
+    setGameState(prev => ({
+      ...prev,
+      settings: { ...prev.settings, ...newSettings }
+    }));
+  };
+
+  const resetGame = () => {
+    localStorage.removeItem('indian-clicker-save');
+    window.location.reload();
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -337,6 +282,16 @@ function App() {
 
   return (
     <div className="min-h-screen">
+      {/* Notification de succès */}
+      {achievementNotification && (
+        <AchievementNotification
+          achievement={achievementNotification}
+          onClose={() => setAchievementNotification(null)}
+          soundVolume={gameState.settings.soundVolume}
+        />
+      )}
+
+      {/* Ticket à gratter modal */}
       {showScratchTicket && currentTicketMonster && (
         <ScratchTicket
           monster={currentTicketMonster}
@@ -345,6 +300,7 @@ function App() {
         />
       )}
 
+      {/* Navigation */}
       <nav className="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex space-x-8">
@@ -358,7 +314,7 @@ function App() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
+                onClick={() => setActiveTab(tab.id as Tab | 'settings')}
                 className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === tab.id
                     ? 'border-yellow-400 text-yellow-400'
@@ -373,6 +329,7 @@ function App() {
         </div>
       </nav>
 
+      {/* Contenu */}
       {renderContent()}
     </div>
   );
