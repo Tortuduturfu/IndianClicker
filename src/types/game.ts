@@ -1,5 +1,13 @@
 export type Tab = 'travail' | 'casino' | 'station-service' | 'collection' | 'achievements';
 
+export type Theme = 'dark' | 'light' | 'neon';
+
+export interface Settings {
+  theme: Theme;
+  soundVolume: number;
+  musicVolume: number;
+}
+
 export interface Monster {
   id: string;
   name: string;
@@ -39,6 +47,8 @@ export interface GameState {
   blackjackWins: number;
   rouletteWins: number;
   slotWins: number;
+  settings: Settings;
+  maxClickPower: number;
 }
 
 

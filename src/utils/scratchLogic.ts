@@ -34,7 +34,7 @@ export function generateRandomMonster(): Monster {
   };
 }
 
-export const TICKET_PRICE = 200; // Prix d'un ticket à gratter
+export const TICKET_PRICE = 500; // Prix d'un ticket à gratter
 
 // Casino utilities
 export function createDeck(): Card[] {

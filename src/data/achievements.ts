@@ -1,7 +1,7 @@
 import { Achievement } from '../types/game';
 
 export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
-  // Visible Achievements (25)
+  // Visible Achievements (40)
   {
     id: 'first_click',
     name: 'Premier Clic',
@@ -28,6 +28,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     isHidden: false,
     condition: (state) => state.totalClicks >= 1000,
     reward: 200
+  },
+  {
+    id: 'ten_thousand_clicks',
+    name: 'Cliqueur Dévoué',
+    description: 'Effectuer 10,000 clics',
+    icon: '⚡',
+    isHidden: false,
+    condition: (state) => state.totalClicks >= 10000,
+    reward: 1000
   },
   {
     id: 'first_rupee',
@@ -57,6 +66,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     reward: 50000
   },
   {
+    id: 'multi_millionaire',
+    name: 'Multi-Millionnaire',
+    description: 'Posséder 10,000,000 roupies',
+    icon: '👑',
+    isHidden: false,
+    condition: (state) => state.rupees >= 10000000,
+    reward: 500000
+  },
+  {
     id: 'first_guillaume',
     name: 'Premier Esclave',
     description: 'Acheter votre premier Guillaume',
@@ -73,6 +91,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     isHidden: false,
     condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.owned, 0) >= 10,
     reward: 500
+  },
+  {
+    id: 'guillaume_empire',
+    name: 'Empire Guillaume',
+    description: 'Posséder 100 Guillaume au total',
+    icon: '🏛️',
+    isHidden: false,
+    condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.owned, 0) >= 100,
+    reward: 5000
   },
   {
     id: 'first_ticket',
@@ -93,6 +120,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     reward: 1000
   },
   {
+    id: 'ticket_master',
+    name: 'Maître des Tickets',
+    description: 'Gratter 200 tickets',
+    icon: '🎪',
+    isHidden: false,
+    condition: (state) => state.totalTicketsScratched >= 200,
+    reward: 5000
+  },
+  {
     id: 'first_monster',
     name: 'Première Monster',
     description: 'Obtenir votre première Monster Energy',
@@ -109,6 +145,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     isHidden: false,
     condition: (state) => state.monstersCollection.filter(m => m.obtained > 0).length >= 10,
     reward: 500
+  },
+  {
+    id: 'monster_enthusiast',
+    name: 'Passionné Monster',
+    description: 'Obtenir 25 Monster différentes',
+    icon: '🎯',
+    isHidden: false,
+    condition: (state) => state.monstersCollection.filter(m => m.obtained > 0).length >= 25,
+    reward: 2500
   },
   {
     id: 'rare_hunter',
@@ -154,6 +199,15 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     isHidden: false,
     condition: (state) => state.totalCasinoWins >= 100,
     reward: 2000
+  },
+  {
+    id: 'casino_legend',
+    name: 'Légende du Casino',
+    description: 'Gagner 500 parties au casino',
+    icon: '🏆',
+    isHidden: false,
+    condition: (state) => state.totalCasinoWins >= 500,
+    reward: 10000
   },
   {
     id: 'power_clicker',
@@ -236,53 +290,89 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     condition: (state) => state.monstersCollection.every(m => m.obtained > 0),
     reward: 100000
   },
-
-  // Hidden Achievements (25)
   {
-    id: 'secret_clicker',
-    name: 'Cliqueur Secret',
-    description: 'Effectuer exactement 1337 clics',
-    icon: '🕵️',
-    isHidden: true,
-    condition: (state) => state.totalClicks === 1337,
-    reward: 1337
-  },
-  {
-    id: 'unlucky_number',
-    name: 'Nombre Maudit',
-    description: 'Posséder exactement 666 roupies',
-    icon: '😈',
-    isHidden: true,
-    condition: (state) => state.rupees === 666,
-    reward: 666
-  },
-  {
-    id: 'lucky_seven',
-    name: 'Sept Chanceux',
-    description: 'Posséder exactement 7777 roupies',
-    icon: '🍀',
-    isHidden: true,
-    condition: (state) => state.rupees === 7777,
-    reward: 777
-  },
-  {
-    id: 'casino_addict',
-    name: 'Accro au Casino',
-    description: 'Perdre 50 parties au casino',
-    icon: '🎰',
-    isHidden: true,
-    condition: (state) => state.totalCasinoLosses >= 50,
-    reward: 1000
-  },
-  {
-    id: 'persistent_loser',
-    name: 'Perdant Persistant',
-    description: 'Perdre 10 parties d\'affilée au casino',
+    id: 'big_spender',
+    name: 'Gros Dépensier',
+    description: 'Dépenser 1,000,000 roupies au total',
     icon: '💸',
-    isHidden: true,
-    condition: (state) => state.totalCasinoLosses >= 10,
-    reward: 500
+    isHidden: false,
+    condition: (state) => (state.totalCasinoBet || 0) + state.guillaumes.reduce((sum, g) => sum + (g.basePrice * g.owned), 0) >= 1000000,
+    reward: 25000
   },
+  {
+    id: 'blackjack_master',
+    name: 'Maître du Blackjack',
+    description: 'Gagner 50 parties de Blackjack',
+    icon: '🃏',
+    isHidden: false,
+    condition: (state) => (state.blackjackWins || 0) >= 50,
+    reward: 3000
+  },
+  {
+    id: 'roulette_champion',
+    name: 'Champion de Roulette',
+    description: 'Gagner 50 parties de Roulette',
+    icon: '🎯',
+    isHidden: false,
+    condition: (state) => (state.rouletteWins || 0) >= 50,
+    reward: 3000
+  },
+  {
+    id: 'slot_king',
+    name: 'Roi des Machines',
+    description: 'Gagner 50 parties aux machines à sous',
+    icon: '🎰',
+    isHidden: false,
+    condition: (state) => (state.slotWins || 0) >= 50,
+    reward: 3000
+  },
+  {
+    id: 'jackpot_winner',
+    name: 'Gagnant du Jackpot',
+    description: 'Gagner plus de 100,000 roupies en une seule fois',
+    icon: '💰',
+    isHidden: false,
+    condition: (state) => (state.biggestWin || 0) >= 100000,
+    reward: 15000
+  },
+  {
+    id: 'automation_master',
+    name: 'Maître de l\'Automatisation',
+    description: 'Avoir 1000 clics/sec automatiques',
+    icon: '🤖',
+    isHidden: false,
+    condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.clicksPerSecond * g.owned, 0) >= 1000,
+    reward: 50000
+  },
+  {
+    id: 'persistent_player',
+    name: 'Joueur Persistant',
+    description: 'Effectuer 100,000 clics au total',
+    icon: '🏃',
+    isHidden: false,
+    condition: (state) => state.totalClicks >= 100000,
+    reward: 25000
+  },
+  {
+    id: 'money_maker',
+    name: 'Faiseur d\'Argent',
+    description: 'Gagner 50,000,000 roupies au total',
+    icon: '🏦',
+    isHidden: false,
+    condition: (state) => state.totalMoneyEarned >= 50000000,
+    reward: 1000000
+  },
+  {
+    id: 'building_master',
+    name: 'Maître Bâtisseur',
+    description: 'Atteindre le niveau de bâtiment maximum',
+    icon: '🏗️',
+    isHidden: false,
+    condition: (state) => state.currentBuilding >= 5,
+    reward: 20000
+  },
+
+  // Hidden Achievements (40)
   {
     id: 'monster_hoarder',
     name: 'Accumulateur de Monster',
@@ -320,15 +410,6 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     reward: 7500
   },
   {
-    id: 'ticket_waster',
-    name: 'Gaspilleur de Tickets',
-    description: 'Gratter 100 tickets sans obtenir d\'épique',
-    icon: '🗑️',
-    isHidden: true,
-    condition: (state) => state.totalTicketsScratched >= 100 && !state.monstersCollection.some(m => m.rarity === 'épique' && m.obtained > 0),
-    reward: 5000
-  },
-  {
     id: 'omega_hunter',
     name: 'Chasseur Omega',
     description: 'Obtenir la Monster Omega',
@@ -353,7 +434,7 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     icon: '🌈',
     isHidden: true,
     condition: (state) => {
-      const colorMonsters = ['m2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9']; // Green, Blue, Red, White, Yellow, Orange, Purple, Pink
+      const colorMonsters = ['m2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'];
       return colorMonsters.every(id => state.monstersCollection.find(m => m.id === id)?.obtained > 0);
     },
     reward: 3000
@@ -368,49 +449,22 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     reward: 50000
   },
   {
-    id: 'click_master',
-    name: 'Maître du Clic',
-    description: 'Effectuer 100,000 clics',
-    icon: '🏆',
-    isHidden: true,
-    condition: (state) => state.totalClicks >= 100000,
-    reward: 25000
-  },
-  {
     id: 'money_printer',
     name: 'Imprimante à Argent',
-    description: 'Gagner 10,000,000 roupies au total',
+    description: 'Gagner 100,000,000 roupies au total',
     icon: '🖨️',
     isHidden: true,
-    condition: (state) => state.totalMoneyEarned >= 10000000,
-    reward: 100000
+    condition: (state) => state.totalMoneyEarned >= 100000000,
+    reward: 2000000
   },
   {
-    id: 'building_speedrun',
-    name: 'Speedrun Bâtiment',
-    description: 'Atteindre la villa en moins de 1000 clics',
-    icon: '🏃',
+    id: 'casino_addict',
+    name: 'Accro au Casino',
+    description: 'Perdre 100 parties au casino',
+    icon: '🎰',
     isHidden: true,
-    condition: (state) => state.currentBuilding >= 5 && state.totalClicks <= 1000,
-    reward: 20000
-  },
-  {
-    id: 'patient_player',
-    name: 'Joueur Patient',
-    description: 'Jouer pendant plus d\'une heure (3600 clics automatiques)',
-    icon: '⏰',
-    isHidden: true,
-    condition: (state) => state.totalClicks >= 3600,
+    condition: (state) => state.totalCasinoLosses >= 100,
     reward: 5000
-  },
-  {
-    id: 'lucky_streak',
-    name: 'Série Chanceuse',
-    description: 'Gagner 20 parties d\'affilée au casino',
-    icon: '🎯',
-    isHidden: true,
-    condition: (state) => state.totalCasinoWins >= 20 && state.totalCasinoLosses === 0,
-    reward: 10000
   },
   {
     id: 'monster_duplicate',
@@ -432,15 +486,6 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
       return commonMonsters.every(m => m.obtained >= 5);
     },
     reward: 10000
-  },
-  {
-    id: 'zero_waste',
-    name: 'Zéro Gaspillage',
-    description: 'Dépenser exactement toutes vos roupies (avoir 0)',
-    icon: '💸',
-    isHidden: true,
-    condition: (state) => state.rupees === 0 && state.totalMoneyEarned > 1000,
-    reward: 1000
   },
   {
     id: 'guillaume_equality',
@@ -471,5 +516,254 @@ export const achievementsData: Omit<Achievement, 'isUnlocked'>[] = [
     isHidden: true,
     condition: (state) => state.monstersCollection.every(m => m.obtained >= 3),
     reward: 500000
+  },
+  {
+    id: 'casino_streak',
+    name: 'Série Casino',
+    description: 'Gagner 10 parties d\'affilée au casino',
+    icon: '🔥',
+    isHidden: true,
+    condition: (state) => state.totalCasinoWins >= 10 && state.totalCasinoLosses === 0,
+    reward: 8000
+  },
+  {
+    id: 'ticket_lucky',
+    name: 'Chanceux aux Tickets',
+    description: 'Obtenir 3 Monster épiques ou monstrueuses en 10 tickets',
+    icon: '🍀',
+    isHidden: true,
+    condition: (state) => {
+      const rareCount = state.monstersCollection.filter(m => (m.rarity === 'épique' || m.rarity === 'monstrueux') && m.obtained > 0).length;
+      return state.totalTicketsScratched <= 10 && rareCount >= 3;
+    },
+    reward: 15000
+  },
+  {
+    id: 'speed_runner',
+    name: 'Speedrunner',
+    description: 'Atteindre 1,000,000 roupies en moins de 5000 clics',
+    icon: '🏃‍♂️',
+    isHidden: true,
+    condition: (state) => state.rupees >= 1000000 && state.totalClicks <= 5000,
+    reward: 50000
+  },
+  {
+    id: 'patient_investor',
+    name: 'Investisseur Patient',
+    description: 'Posséder 100 Guillaume sans jamais aller au casino',
+    icon: '📈',
+    isHidden: true,
+    condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.owned, 0) >= 100 && state.totalCasinoWins === 0 && state.totalCasinoLosses === 0,
+    reward: 25000
+  },
+  {
+    id: 'monster_variety',
+    name: 'Variété Monster',
+    description: 'Obtenir au moins une Monster de chaque rareté',
+    icon: '🎨',
+    isHidden: true,
+    condition: (state) => {
+      const rarities = ['commun', 'rare', 'épique', 'monstrueux'];
+      return rarities.every(rarity => 
+        state.monstersCollection.some(m => m.rarity === rarity && m.obtained > 0)
+      );
+    },
+    reward: 5000
+  },
+  {
+    id: 'click_efficiency',
+    name: 'Efficacité de Clic',
+    description: 'Gagner 10,000,000 roupies avec moins de 1000 clics manuels',
+    icon: '⚙️',
+    isHidden: true,
+    condition: (state) => state.totalMoneyEarned >= 10000000 && state.totalClicks <= 1000,
+    reward: 100000
+  },
+  {
+    id: 'casino_master',
+    name: 'Maître du Casino',
+    description: 'Gagner au moins 10 parties dans chaque jeu de casino',
+    icon: '🎪',
+    isHidden: true,
+    condition: (state) => (state.blackjackWins || 0) >= 10 && (state.rouletteWins || 0) >= 10 && (state.slotWins || 0) >= 10,
+    reward: 15000
+  },
+  {
+    id: 'monster_economist',
+    name: 'Économiste Monster',
+    description: 'Obtenir 50 Monster différentes sans acheter de Guillaume',
+    icon: '💼',
+    isHidden: true,
+    condition: (state) => {
+      const uniqueMonsters = state.monstersCollection.filter(m => m.obtained > 0).length;
+      const totalGuillaume = state.guillaumes.reduce((sum, g) => sum + g.owned, 0);
+      return uniqueMonsters >= 50 && totalGuillaume === 0;
+    },
+    reward: 75000
+  },
+  {
+    id: 'building_speedrun',
+    name: 'Construction Rapide',
+    description: 'Atteindre la villa en moins de 2000 clics',
+    icon: '🏗️',
+    isHidden: true,
+    condition: (state) => state.currentBuilding >= 5 && state.totalClicks <= 2000,
+    reward: 30000
+  },
+  {
+    id: 'ticket_hoarder',
+    name: 'Collectionneur de Tickets',
+    description: 'Posséder 50 tickets à gratter en même temps',
+    icon: '🎫',
+    isHidden: true,
+    condition: (state) => state.scratchTickets >= 50,
+    reward: 10000
+  },
+  {
+    id: 'monster_trader',
+    name: 'Commerçant Monster',
+    description: 'Obtenir 500 Monster au total',
+    icon: '🏪',
+    isHidden: true,
+    condition: (state) => state.monstersCollection.reduce((sum, m) => sum + m.obtained, 0) >= 500,
+    reward: 100000
+  },
+  {
+    id: 'automation_god',
+    name: 'Dieu de l\'Automatisation',
+    description: 'Avoir 10,000 clics/sec automatiques',
+    icon: '🔮',
+    isHidden: true,
+    condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.clicksPerSecond * g.owned, 0) >= 10000,
+    reward: 1000000
+  },
+  {
+    id: 'casino_whale',
+    name: 'Baleine du Casino',
+    description: 'Miser plus de 10,000,000 roupies au total',
+    icon: '🐋',
+    isHidden: true,
+    condition: (state) => (state.totalCasinoBet || 0) >= 10000000,
+    reward: 500000
+  },
+  {
+    id: 'monster_perfectionist',
+    name: 'Perfectionniste Monster',
+    description: 'Obtenir exactement 10 de chaque Monster commune',
+    icon: '🎯',
+    isHidden: true,
+    condition: (state) => {
+      const commonMonsters = state.monstersCollection.filter(m => m.rarity === 'commun');
+      return commonMonsters.every(m => m.obtained === 10);
+    },
+    reward: 50000
+  },
+  {
+    id: 'click_master_supreme',
+    name: 'Maître Suprême du Clic',
+    description: 'Effectuer 1,000,000 clics au total',
+    icon: '👑',
+    isHidden: true,
+    condition: (state) => state.totalClicks >= 1000000,
+    reward: 500000
+  },
+  {
+    id: 'fortune_builder',
+    name: 'Bâtisseur de Fortune',
+    description: 'Gagner 1,000,000,000 roupies au total',
+    icon: '🏰',
+    isHidden: true,
+    condition: (state) => state.totalMoneyEarned >= 1000000000,
+    reward: 10000000
+  },
+  {
+    id: 'monster_legend',
+    name: 'Légende Monster',
+    description: 'Obtenir 100 Monster monstrueuses',
+    icon: '🌟',
+    isHidden: true,
+    condition: (state) => {
+      const legendaryCount = state.monstersCollection
+        .filter(m => m.rarity === 'monstrueux')
+        .reduce((sum, m) => sum + m.obtained, 0);
+      return legendaryCount >= 100;
+    },
+    reward: 1000000
+  },
+  {
+    id: 'guillaume_tycoon',
+    name: 'Magnat Guillaume',
+    description: 'Posséder 1000 Guillaume au total',
+    icon: '💰',
+    isHidden: true,
+    condition: (state) => state.guillaumes.reduce((sum, g) => sum + g.owned, 0) >= 1000,
+    reward: 500000
+  },
+  {
+    id: 'casino_legend_supreme',
+    name: 'Légende Suprême du Casino',
+    description: 'Gagner 1000 parties au casino',
+    icon: '👑',
+    isHidden: true,
+    condition: (state) => state.totalCasinoWins >= 1000,
+    reward: 1000000
+  },
+  {
+    id: 'ticket_master_supreme',
+    name: 'Maître Suprême des Tickets',
+    description: 'Gratter 1000 tickets',
+    icon: '🎪',
+    isHidden: true,
+    condition: (state) => state.totalTicketsScratched >= 1000,
+    reward: 500000
+  },
+  {
+    id: 'power_infinite',
+    name: 'Puissance Infinie',
+    description: 'Atteindre x10000 de puissance de clic',
+    icon: '♾️',
+    isHidden: true,
+    condition: (state) => state.maxClickPower >= 10000,
+    reward: 5000000
+  },
+  {
+    id: 'ultimate_master',
+    name: 'Maître Ultime',
+    description: 'Débloquer tous les autres succès',
+    icon: '🏆',
+    isHidden: true,
+    condition: (state) => {
+      const totalAchievements = 79; // Total moins ce succès
+      const unlockedCount = state.achievements.filter(a => a.isUnlocked && a.id !== 'ultimate_master').length;
+      return unlockedCount >= totalAchievements;
+    },
+    reward: 10000000
+  },
+  {
+    id: 'monster_god',
+    name: 'Dieu Monster',
+    description: 'Obtenir 1000 Monster au total',
+    icon: '⚡',
+    isHidden: true,
+    condition: (state) => state.monstersCollection.reduce((sum, m) => sum + m.obtained, 0) >= 1000,
+    reward: 2000000
+  },
+  {
+    id: 'billionaire',
+    name: 'Milliardaire',
+    description: 'Posséder 1,000,000,000 roupies',
+    icon: '💎',
+    isHidden: true,
+    condition: (state) => state.rupees >= 1000000000,
+    reward: 100000000
+  },
+  {
+    id: 'mega_jackpot',
+    name: 'Méga Jackpot',
+    description: 'Gagner plus de 1,000,000 roupies en une seule fois',
+    icon: '🎰',
+    isHidden: true,
+    condition: (state) => (state.biggestWin || 0) >= 1000000,
+    reward: 500000
   }
-]
+];
