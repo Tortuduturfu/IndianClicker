@@ -178,19 +178,19 @@ export default function AchievementNotification({ achievement, onClose, soundVol
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 pointer-events-none">
+    <div className="fixed top-4 right-4 pointer-events-none" style={{ zIndex: 9999 }}>
       <div className={`transform transition-all duration-500 ease-out ${
         isVisible 
           ? 'translate-x-0 opacity-100 scale-100 rotate-0' 
           : 'translate-x-full opacity-0 scale-75 rotate-12'
       }`}>
-        <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-5 shadow-2xl border-4 border-yellow-300 max-w-sm relative overflow-hidden pointer-events-auto">
+        <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-5 shadow-2xl border-4 border-yellow-300 max-w-sm relative overflow-hidden pointer-events-auto" style={{ zIndex: 10000 }}>
           
           {/* Effet de brillance animé */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-pulse"></div>
           
           {/* Contenu principal */}
-          <div className="relative z-10">
+          <div className="relative" style={{ zIndex: 10001 }}>
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center space-x-4">
                 <div className="text-5xl animate-bounce drop-shadow-lg">
