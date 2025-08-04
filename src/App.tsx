@@ -9,25 +9,25 @@ import Casino from './components/Casino';
 import StationService from './components/StationService';
 import Collection from './components/Collection';
 import Achievements from './components/Achievements';
+import Settings from './components/Settings';
 import ScratchTicket from './components/ScratchTicket';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('travail');
   const [showScratchTicket, setShowScratchTicket] = useState(false);
   const [currentTicketMonster, setCurrentTicketMonster] = useState<Monster | null>(null);
+  
   const [gameState, setGameState] = useState<GameState>(() => {
     try {
       const saved = localStorage.getItem('indian-clicker-save');
       if (saved) {
         const parsedState = JSON.parse(saved);
         
-        // Validate that critical arrays exist and are arrays
         if (parsedState && 
             Array.isArray(parsedState.guillaumes) &&
             Array.isArray(parsedState.monstersCollection) &&
             Array.isArray(parsedState.achievements)) {
           
-          // Restore achievement condition functions from achievementsData
           const restoredAchievements = achievementsData.map(originalAchievement => {
             const savedAchievement = parsedState.achievements.find(
               (saved: any) => saved.id === originalAchievement.id
@@ -38,21 +38,30 @@ function App() {
             };
           });
           
-          parsedState.achievements = restoredAchievements;
-          return parsedState;
+          // Assurer la présence des settings
+          const settings = parsedState.settings || {
+            theme: 'dark',
+            soundVolume: 50
+          };
+          
+          return {
+            ...parsedState,
+            achievements: restoredAchievements,
+            settings,
+            maxClickPower: parsedState.maxClickPower || parsedState.clickPower || 1
+          };
         }
       }
     } catch (error) {
       console.warn('Failed to load saved game state, starting fresh:', error);
-      // Clear corrupted save data
       localStorage.removeItem('indian-clicker-save');
     }
     
-    // Return default state if loading failed or data is invalid
     return {
       rupees: 10,
       totalClicks: 0,
       clickPower: 1,
+      maxClickPower: 1,
       guillaumes: guillaumesData.map(g => ({ ...g, currentPrice: g.basePrice, owned: 0 })),
       monstersCollection: monstersData.map(m => ({ ...m, currentPrice: m.basePrice, obtained: 0 })),
       currentBuilding: 0,
@@ -66,16 +75,56 @@ function App() {
       biggestWin: 0,
       blackjackWins: 0,
       rouletteWins: 0,
-      slotWins: 0
+      slotWins: 0,
+      settings: {
+        theme: 'dark',
+        soundVolume: 50
+      }
     };
   });
+
+  // Appliquer le thème au chargement
+  useEffect(() => {
+    applyTheme(gameState.settings.theme);
+  }, [gameState.settings.theme]);
+
+  const applyTheme = (theme: string) => {
+    if (typeof document === 'undefined') return;
+    
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = `theme-${theme}`;
+    
+    const root = document.documentElement;
+    
+    switch(theme) {
+      case 'dark':
+        root.style.setProperty('--bg-primary', '#1a1a2e');
+        root.style.setProperty('--bg-secondary', '#16213e');
+        root.style.setProperty('--text-primary', '#ffffff');
+        root.style.setProperty('--accent', '#3b82f6');
+        break;
+      case 'light':
+        root.style.setProperty('--bg-primary', '#ffffff');
+        root.style.setProperty('--bg-secondary', '#f8fafc');
+        root.style.setProperty('--text-primary', '#1e293b');
+        root.style.setProperty('--accent', '#3b82f6');
+        break;
+      case 'neon':
+        root.style.setProperty('--bg-primary', '#0a0a0f');
+        root.style.setProperty('--bg-secondary', '#1a0d2e');
+        root.style.setProperty('--text-primary', '#ffffff');
+        root.style.setProperty('--accent', '#f59e0b');
+        break;
+      // Ajoutez les autres thèmes...
+    }
+  };
 
   // Sauvegarde automatique
   useEffect(() => {
     localStorage.setItem('indian-clicker-save', JSON.stringify(gameState));
   }, [gameState]);
 
-  // Calcul du niveau de bâtiment basé sur les roupies
+  // Calcul du niveau de bâtiment
   useEffect(() => {
     let newBuilding = 0;
     if (gameState.rupees >= 50000) newBuilding = 5;
@@ -129,6 +178,42 @@ function App() {
   const updateStats = (stats: Partial<GameState>) => {
     setGameState(prev => ({ ...prev, ...stats }));
   };
+
+  const updateSettings = (newSettings: Partial<GameState['settings']>) => {
+    setGameState(prev => ({
+      ...prev,
+      settings: { ...prev.settings, ...newSettings }
+    }));
+  };
+
+  const resetGame = () => {
+    localStorage.removeItem('indian-clicker-save');
+    setGameState({
+      rupees: 10,
+      totalClicks: 0,
+      clickPower: 1,
+      maxClickPower: 1,
+      guillaumes: guillaumesData.map(g => ({ ...g, currentPrice: g.basePrice, owned: 0 })),
+      monstersCollection: monstersData.map(m => ({ ...m, currentPrice: m.basePrice, obtained: 0 })),
+      currentBuilding: 0,
+      scratchTickets: 0,
+      achievements: achievementsData.map(a => ({ ...a, isUnlocked: false })),
+      totalMoneyEarned: 0,
+      totalTicketsScratched: 0,
+      totalCasinoWins: 0,
+      totalCasinoLosses: 0,
+      totalCasinoBet: 0,
+      biggestWin: 0,
+      blackjackWins: 0,
+      rouletteWins: 0,
+      slotWins: 0,
+      settings: {
+        theme: 'dark',
+        soundVolume: 50
+      }
+    });
+  };
+
   const buyTicket = () => {
     if (gameState.rupees >= TICKET_PRICE) {
       setGameState(prev => ({
@@ -137,7 +222,6 @@ function App() {
         scratchTickets: prev.scratchTickets + 1
       }));
       
-      // Générer un monster aléatoire pour le ticket
       const randomMonster = generateRandomMonster();
       setCurrentTicketMonster(randomMonster);
       setShowScratchTicket(true);
@@ -164,7 +248,6 @@ function App() {
       };
     });
 
-    // Check for achievements after ticket reveal
     checkAchievements();
   };
 
@@ -184,7 +267,7 @@ function App() {
             ? { 
                 ...g, 
                 owned: g.owned + 1,
-                currentPrice: Math.floor(g.currentPrice * 1.2) // Prix augmente de 20%
+                currentPrice: Math.floor(g.currentPrice * 1.2)
               }
             : g
         )
@@ -192,12 +275,10 @@ function App() {
     }
   };
 
-  // Check achievements
   const checkAchievements = () => {
     setGameState(prev => {
       const updatedAchievements = prev.achievements.map(achievement => {
         if (!achievement.isUnlocked && achievement.condition(prev)) {
-          // Award bonus rupees for unlocking achievement
           if (achievement.reward) {
             setTimeout(() => {
               setGameState(current => ({
@@ -219,7 +300,6 @@ function App() {
     });
   };
 
-  // Check achievements on game state changes
   React.useEffect(() => {
     checkAchievements();
   }, [gameState.totalClicks, gameState.rupees, gameState.totalMoneyEarned, gameState.currentBuilding]);
@@ -242,6 +322,14 @@ function App() {
         return <Collection monstersCollection={gameState.monstersCollection} />;
       case 'achievements':
         return <Achievements achievements={gameState.achievements} />;
+      case 'settings':
+        return (
+          <Settings
+            gameState={gameState}
+            onUpdateSettings={updateSettings}
+            onResetGame={resetGame}
+          />
+        );
       default:
         return <Travail gameState={gameState} onClic={handleClick} />;
     }
@@ -249,7 +337,6 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      {/* Ticket à gratter modal */}
       {showScratchTicket && currentTicketMonster && (
         <ScratchTicket
           monster={currentTicketMonster}
@@ -258,7 +345,6 @@ function App() {
         />
       )}
 
-      {/* Navigation */}
       <nav className="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex space-x-8">
@@ -267,7 +353,8 @@ function App() {
               { id: 'casino', name: 'Casino', icon: '🎰' },
               { id: 'station-service', name: 'Station-Service', icon: '⛽' },
               { id: 'collection', name: 'Collection', icon: '📚' },
-              { id: 'achievements', name: 'Succès', icon: '🏆' }
+              { id: 'achievements', name: 'Succès', icon: '🏆' },
+              { id: 'settings', name: 'Paramètres', icon: '⚙️' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -286,85 +373,9 @@ function App() {
         </div>
       </nav>
 
-      {/* Contenu */}
       {renderContent()}
     </div>
   );
 }
 
 export default App;
-export type Tab = 'travail' | 'casino' | 'station-service' | 'collection' | 'achievements' | 'settings';
-
-export type Theme = 'dark' | 'light' | 'neon' | 'forest' | 'ocean' | 'sunset' | 'cyberpunk' | 'retro';
-
-export interface Settings {
-  theme: Theme;
-  soundVolume: number;
-}
-
-export interface Monster {
-  id: string;
-  name: string;
-  rarity: 'commun' | 'rare' | 'épique' | 'monstrueux';
-  basePrice: number;
-  currentPrice: number;
-  multiplier: number;
-  image: string;
-  obtained: number;
-}
-
-export interface Guillaume {
-  id: string;
-  name: string;
-  emoji: string;
-  basePrice: number;
-  currentPrice: number;
-  clicksPerSecond: number;
-  owned: number;
-}
-
-export interface GameState {
-  rupees: number;
-  totalClicks: number;
-  clickPower: number;
-  maxClickPower?: number;
-  guillaumes: Guillaume[];
-  monstersCollection: Monster[];
-  currentBuilding: number;
-  scratchTickets: number;
-  achievements: Achievement[];
-  totalMoneyEarned: number;
-  totalTicketsScratched: number;
-  totalCasinoWins: number;
-  totalCasinoLosses: number;
-  totalCasinoBet: number;
-  biggestWin: number;
-  blackjackWins: number;
-  rouletteWins: number;
-  slotWins: number;
-  settings: Settings;
-}
-
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  isHidden: boolean;
-  isUnlocked: boolean;
-  condition: (gameState: GameState) => boolean;
-  reward?: number;
-}
-
-export interface Card {
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-  value: number;
-  display: string;
-}
-
-export interface BlackjackHand {
-  cards: Card[];
-  value: number;
-  isBlackjack: boolean;
-  isBust: boolean;
-}
