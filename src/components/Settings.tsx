@@ -143,8 +143,11 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
     // Appliquer le thème immédiatement
     applyTheme(theme);
     
-    // Sauvegarder dans les paramètres du jeu seulement
+    // Sauvegarder dans les paramètres
     onUpdateSettings({ theme });
+    
+    // Sauvegarder dans localStorage pour persistance
+    localStorage.setItem('game-theme', theme);
   };
 
   const handleVolumeChange = (volume: number) => {
@@ -156,6 +159,9 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
       audioElements.forEach(audio => {
         audio.volume = volume / 100;
       });
+      
+      // Sauvegarder le volume dans le localStorage pour persistance
+      localStorage.setItem('game-soundVolume', volume.toString());
     }
   };
 
@@ -185,67 +191,62 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
   const safeMonstersCollection = gameState?.monstersCollection || [];
   const safeGuillaumes = gameState?.guillaumes || [];
 
-  // Fonction pour jouer un son de test - version simplifiée et sécurisée
+  // Fonction pour jouer un son de test
   const playTestSound = () => {
     try {
-      // Vérifier si AudioContext est disponible
-      if (typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext)) {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = 440; // Note A4
-        gainNode.gain.value = (safeSettings.soundVolume / 100) * 0.1; // Volume réduit pour le test
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.2); // Son de 200ms
-      } else {
-        console.log('Test audio: Volume réglé à ' + safeSettings.soundVolume + '%');
-      }
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 440; // Note A4
+      gainNode.gain.value = (safeSettings.soundVolume / 100) * 0.1; // Volume réduit pour le test
+      
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.2); // Son de 200ms
     } catch (error) {
-      console.warn('Son de test non disponible sur cette plateforme');
+      console.warn('Impossible de jouer le son de test:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-4">
             ⚙️ PARAMÈTRES ⚙️
           </h1>
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 sm:p-4 inline-block">
-            <div className="text-xl sm:text-2xl font-bold text-white">
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 inline-block">
+            <div className="text-2xl font-bold text-white">
               ₹ {safeRupees.toLocaleString('fr-FR')} Roupies
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Thèmes */}
-          <div className="lg:col-span-2 bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 text-center">
+          <div className="lg:col-span-2 bg-white/10 backdrop-blur-sm rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               🎨 THÈMES DU JEU
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {themes.map((theme) => (
                 <button
                   key={theme.id}
                   onClick={() => handleThemeChange(theme.id)}
-                  className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                     safeSettings.theme === theme.id
                       ? 'border-yellow-400 bg-yellow-400/20 transform scale-105'
                       : 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50'
                   }`}
                 >
-                  <div className="text-center space-y-1 sm:space-y-2">
-                    <div className="text-2xl sm:text-3xl">{theme.icon}</div>
-                    <div className="text-white font-bold text-xs sm:text-sm">{theme.name}</div>
-                    <div className={`w-full h-4 sm:h-6 rounded-full bg-gradient-to-r ${theme.gradient}`}></div>
-                    <div className="text-white/70 text-xs hidden sm:block">{theme.description}</div>
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl">{theme.icon}</div>
+                    <div className="text-white font-bold text-sm">{theme.name}</div>
+                    <div className={`w-full h-6 rounded-full bg-gradient-to-r ${theme.gradient}`}></div>
+                    <div className="text-white/70 text-xs">{theme.description}</div>
                     {safeSettings.theme === theme.id && (
                       <div className="text-yellow-400 text-xs font-bold">✓ ACTIF</div>
                     )}
@@ -256,19 +257,19 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
           </div>
 
           {/* Audio */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 text-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               🔊 PARAMÈTRES AUDIO
             </h2>
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-white font-bold text-sm sm:text-base">
-                    🎵 Volume: {safeSettings.soundVolume}%
+                  <label className="text-white font-bold">
+                    🎵 Volume des Sons: {safeSettings.soundVolume}%
                   </label>
                   <button
                     onClick={playTestSound}
-                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 sm:px-3 py-1 rounded transition-colors"
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded transition-colors"
                   >
                     🔊 Test
                   </button>
@@ -291,8 +292,8 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
                 </div>
               </div>
               
-              <div className="bg-white/20 rounded-lg p-3 sm:p-4">
-                <div className="text-white/80 text-xs sm:text-sm text-center mb-2">
+              <div className="bg-white/20 rounded-lg p-4">
+                <div className="text-white/80 text-sm text-center mb-2">
                   💡 Ce paramètre affecte tous les effets sonores du jeu
                 </div>
                 <div className="text-white/60 text-xs text-center">
@@ -303,36 +304,36 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
           </div>
 
           {/* Statistiques */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 text-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               📊 STATISTIQUES
             </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Clics Totaux</div>
-                <div className="text-white/80 text-sm sm:text-lg">{safeTotalClicks.toLocaleString('fr-FR')}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Clics Totaux</div>
+                <div className="text-white/80 text-lg">{safeTotalClicks.toLocaleString('fr-FR')}</div>
               </div>
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Argent Gagné</div>
-                <div className="text-white/80 text-sm sm:text-lg">₹{safeTotalMoneyEarned.toLocaleString('fr-FR')}</div>
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Argent Gagné</div>
+                <div className="text-white/80 text-lg">₹{safeTotalMoneyEarned.toLocaleString('fr-FR')}</div>
               </div>
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Tickets Grattés</div>
-                <div className="text-white/80 text-sm sm:text-lg">{safeTotalTicketsScratched}</div>
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Tickets Grattés</div>
+                <div className="text-white/80 text-lg">{safeTotalTicketsScratched}</div>
               </div>
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Victoires Casino</div>
-                <div className="text-white/80 text-sm sm:text-lg">{safeTotalCasinoWins}</div>
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Victoires Casino</div>
+                <div className="text-white/80 text-lg">{safeTotalCasinoWins}</div>
               </div>
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Monstres Collectés</div>
-                <div className="text-white/80 text-sm sm:text-lg">
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Monstres Collectés</div>
+                <div className="text-white/80 text-lg">
                   {safeMonstersCollection.reduce((sum, m) => sum + (m?.obtained || 0), 0)}
                 </div>
               </div>
-              <div className="bg-white/20 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-white font-bold text-xs sm:text-sm">Guillaume Possédés</div>
-                <div className="text-white/80 text-sm sm:text-lg">
+              <div className="bg-white/20 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-sm">Guillaume Possédés</div>
+                <div className="text-white/80 text-lg">
                   {safeGuillaumes.reduce((sum, g) => sum + (g?.owned || 0), 0)}
                 </div>
               </div>
@@ -340,14 +341,14 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
           </div>
 
           {/* Réinitialisation */}
-          <div className="lg:col-span-2 bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 text-center">
+          <div className="lg:col-span-2 bg-white/10 backdrop-blur-sm rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               🔄 RÉINITIALISATION
             </h2>
             <div className="text-center space-y-4 max-w-md mx-auto">
-              <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 sm:p-4">
+              <div className="bg-red-500/20 border border-red-500 rounded-lg p-4">
                 <div className="text-red-300 font-bold mb-2">⚠️ ATTENTION ⚠️</div>
-                <div className="text-white/80 text-xs sm:text-sm">
+                <div className="text-white/80 text-sm">
                   Cette action supprimera définitivement toute votre progression !<br/>
                   Tous vos monstres, Guillaume, argent et statistiques seront perdus.
                 </div>
@@ -356,25 +357,25 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
               {!showResetConfirm ? (
                 <button
                   onClick={() => setShowResetConfirm(true)}
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200"
                 >
                   🗑️ Réinitialiser la Partie
                 </button>
               ) : (
                 <div className="space-y-4">
-                  <div className="text-white font-bold text-base sm:text-lg">
+                  <div className="text-white font-bold text-lg">
                     Êtes-vous vraiment sûr ?
                   </div>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
+                  <div className="flex space-x-4 justify-center">
                     <button
                       onClick={confirmReset}
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
                     >
                       ✅ Oui, supprimer tout
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors"
                     >
                       ❌ Annuler
                     </button>
@@ -385,9 +386,9 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
           </div>
         </div>
 
-        <div className="mt-6 sm:mt-8 text-center">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 inline-block">
-            <div className="text-white text-xs sm:text-sm">
+        <div className="mt-8 text-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 inline-block">
+            <div className="text-white text-sm">
               💡 Vos paramètres sont sauvegardés automatiquement !<br/>
               🎮 Profitez de votre expérience de jeu personnalisée !
             </div>
