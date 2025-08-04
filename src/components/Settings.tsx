@@ -15,11 +15,51 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
     // Apply theme to document
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', theme);
+      // Forcer le re-render en appliquant les classes CSS directement
+      document.body.className = `theme-${theme}`;
+      
+      // Appliquer les variables CSS selon le thème
+      const root = document.documentElement;
+      switch(theme) {
+        case 'dark':
+          root.style.setProperty('--bg-primary', '#1f2937');
+          root.style.setProperty('--bg-secondary', '#374151');
+          root.style.setProperty('--text-primary', '#ffffff');
+          root.style.setProperty('--accent', '#3b82f6');
+          break;
+        case 'light':
+          root.style.setProperty('--bg-primary', '#f3f4f6');
+          root.style.setProperty('--bg-secondary', '#ffffff');
+          root.style.setProperty('--text-primary', '#1f2937');
+          root.style.setProperty('--accent', '#3b82f6');
+          break;
+        case 'neon':
+          root.style.setProperty('--bg-primary', '#581c87');
+          root.style.setProperty('--bg-secondary', '#7c3aed');
+          root.style.setProperty('--text-primary', '#ffffff');
+          root.style.setProperty('--accent', '#f59e0b');
+          break;
+      }
     }
   };
 
   const handleVolumeChange = (type: 'soundVolume' | 'musicVolume', value: number) => {
     onUpdateSettings({ [type]: value });
+    
+    // Appliquer immédiatement les changements de volume à tous les éléments audio
+    if (typeof document !== 'undefined') {
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (type === 'soundVolume' && audio.classList.contains('sound-effect')) {
+          audio.volume = value / 100;
+        } else if (type === 'musicVolume' && audio.classList.contains('background-music')) {
+          audio.volume = value / 100;
+        }
+      });
+      
+      // Sauvegarder les volumes dans le localStorage pour persistance
+      localStorage.setItem(`game-${type}`, value.toString());
+    }
   };
 
   const confirmReset = () => {
@@ -42,6 +82,23 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
   const safeTotalCasinoWins = gameState?.totalCasinoWins || 0;
   const safeMonstersCollection = gameState?.monstersCollection || [];
   const safeGuillaumes = gameState?.guillaumes || [];
+
+  // Fonction pour jouer un son de test
+  const playTestSound = () => {
+    // Créer un son de test pour vérifier le volume
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 440; // Note A4
+    gainNode.gain.value = (safeSettings.soundVolume / 100) * 0.1; // Volume réduit pour le test
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.2); // Son de 200ms
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
@@ -93,9 +150,17 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
             </h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-white font-bold mb-3">
-                  🎵 Volume des Effets Sonores: {safeSettings.soundVolume}%
-                </label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-white font-bold">
+                    🎵 Volume des Effets Sonores: {safeSettings.soundVolume}%
+                  </label>
+                  <button
+                    onClick={playTestSound}
+                    className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded"
+                  >
+                    🔊 Test
+                  </button>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -127,8 +192,11 @@ export default function Settings({ gameState, onUpdateSettings, onResetGame }: S
                 />
               </div>
               <div className="bg-white/20 rounded-lg p-4">
-                <div className="text-white/80 text-sm text-center">
+                <div className="text-white/80 text-sm text-center mb-2">
                   💡 Les paramètres audio affectent tous les sons du jeu
+                </div>
+                <div className="text-white/60 text-xs text-center">
+                  ⚠️ Assurez-vous que vos éléments audio ont les classes 'sound-effect' ou 'background-music'
                 </div>
               </div>
             </div>
