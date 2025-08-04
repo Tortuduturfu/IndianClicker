@@ -9,10 +9,17 @@ const RARITY_CHANCES = {
   monstrueux: 0.03  // 3%
 };
 
+// Configuration du prix progressif
+const PRICE_CONFIG = {
+  basePrice: 500,           // Prix de base d'un ticket
+  priceIncrease: 50,        // Augmentation par achat
+  maxPriceMultiplier: 5     // Prix maximum = basePrice * maxPriceMultiplier
+};
+
 export function generateRandomMonster(): Monster {
   const random = Math.random();
   let rarity: 'commun' | 'rare' | 'épique' | 'monstrueux';
-  
+     
   if (random < RARITY_CHANCES.monstrueux) {
     rarity = 'monstrueux';
   } else if (random < RARITY_CHANCES.monstrueux + RARITY_CHANCES.épique) {
@@ -22,11 +29,11 @@ export function generateRandomMonster(): Monster {
   } else {
     rarity = 'commun';
   }
-  
+     
   // Sélectionner un monster aléatoire de cette rareté
   const monstersOfRarity = monstersData.filter(m => m.rarity === rarity);
   const randomMonster = monstersOfRarity[Math.floor(Math.random() * monstersOfRarity.length)];
-  
+     
   return {
     ...randomMonster,
     currentPrice: randomMonster.basePrice,
@@ -34,13 +41,43 @@ export function generateRandomMonster(): Monster {
   };
 }
 
-export const TICKET_PRICE = 500; // Prix d'un ticket à gratter
+// Fonction pour calculer le prix actuel d'un ticket basé sur le nombre d'achats
+export function calculateTicketPrice(totalPurchases: number): number {
+  const increasedPrice = PRICE_CONFIG.basePrice + (totalPurchases * PRICE_CONFIG.priceIncrease);
+  const maxPrice = PRICE_CONFIG.basePrice * PRICE_CONFIG.maxPriceMultiplier;
+  
+  return Math.min(increasedPrice, maxPrice);
+}
 
-// Casino utilities
+// Fonction pour obtenir le prix du prochain ticket
+export function getNextTicketPrice(totalPurchases: number): number {
+  return calculateTicketPrice(totalPurchases);
+}
+
+// Fonction pour obtenir des informations sur l'évolution des prix
+export function getPriceInfo(totalPurchases: number) {
+  const currentPrice = calculateTicketPrice(totalPurchases);
+  const nextPrice = calculateTicketPrice(totalPurchases + 1);
+  const maxPrice = PRICE_CONFIG.basePrice * PRICE_CONFIG.maxPriceMultiplier;
+  const isMaxPrice = currentPrice >= maxPrice;
+  
+  return {
+    currentPrice,
+    nextPrice: isMaxPrice ? maxPrice : nextPrice,
+    priceIncrease: isMaxPrice ? 0 : PRICE_CONFIG.priceIncrease,
+    isMaxPrice,
+    totalPurchases
+  };
+}
+
+// Prix d'un ticket (maintenant dynamique)
+export const TICKET_PRICE = PRICE_CONFIG.basePrice; // Prix de base pour référence
+
+// Casino utilities (inchangé)
 export function createDeck(): Card[] {
   const suits: Card['suit'][] = ['hearts', 'diamonds', 'clubs', 'spades'];
   const deck: Card[] = [];
-  
+     
   for (const suit of suits) {
     for (let value = 1; value <= 13; value++) {
       let display = '';
@@ -49,11 +86,11 @@ export function createDeck(): Card[] {
       else if (value === 12) display = 'Q';
       else if (value === 13) display = 'K';
       else display = value.toString();
-      
+             
       deck.push({ suit, value, display });
     }
   }
-  
+     
   return shuffleDeck(deck);
 }
 
@@ -75,7 +112,7 @@ export function getCardValue(card: Card, aceAsEleven: boolean = true): number {
 export function calculateHandValue(cards: Card[]): { value: number; isBlackjack: boolean; isBust: boolean } {
   let value = 0;
   let aces = 0;
-  
+     
   for (const card of cards) {
     if (card.value === 1) {
       aces++;
@@ -86,16 +123,16 @@ export function calculateHandValue(cards: Card[]): { value: number; isBlackjack:
       value += card.value;
     }
   }
-  
+     
   // Adjust for aces
   while (value > 21 && aces > 0) {
     value -= 10;
     aces--;
   }
-  
+     
   const isBlackjack = cards.length === 2 && value === 21;
   const isBust = value > 21;
-  
+     
   return { value, isBlackjack, isBust };
 }
 
