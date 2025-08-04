@@ -13,28 +13,45 @@ export type Theme =
 export interface GameSettings {
   theme: Theme;
   soundVolume: number; // 0-100
+  musicVolume?: number; // 0-100 (optionnel pour l'instant)
+}
+
+// Interface pour les cartes (casino)
+export interface Card {
+  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+  value: number; // 1-13 (1 = As, 11 = Valet, 12 = Dame, 13 = Roi)
+  display: string; // 'A', '2', '3', ..., 'J', 'Q', 'K'
+}
+
+// Interface pour les mains de blackjack
+export interface BlackjackHand {
+  cards: Card[];
+  value: number;
+  isBlackjack: boolean;
+  isBust: boolean;
 }
 
 // Interface pour les monstres
 export interface Monster {
   id: string;
   name: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: 'commun' | 'rare' | 'épique' | 'monstrueux';
+  basePrice: number;
+  currentPrice: number;
+  multiplier: number;
   obtained: number;
-  maxObtainable?: number;
-  description?: string;
-  image?: string;
+  image: string;
 }
 
 // Interface pour les Guillaume
 export interface Guillaume {
   id: string;
   name: string;
-  cost: number;
+  emoji: string;
+  basePrice: number;
+  currentPrice: number;
+  clicksPerSecond: number;
   owned: number;
-  baseIncome: number;
-  description?: string;
-  upgradeMultiplier?: number;
 }
 
 // Interface pour les achievements
@@ -43,50 +60,45 @@ export interface Achievement {
   name: string;
   description: string;
   icon: string;
-  unlocked: boolean;
-  progress: number;
-  maxProgress: number;
-  reward?: {
-    type: 'rupees' | 'multiplier' | 'unlock';
-    value: number;
-  };
+  isUnlocked: boolean;
+  isHidden: boolean;
+  condition: (state: GameState) => boolean;
+  reward?: number;
 }
+
+// Types pour les onglets
+export type Tab = 'travail' | 'casino' | 'station-service' | 'collection' | 'achievements';
 
 // Interface principale pour l'état du jeu
 export interface GameState {
   // Ressources
   rupees: number;
-  
-  // Paramètres
-  settings: GameSettings;
-  
-  // Statistiques
   totalClicks: number;
-  totalMoneyEarned: number;
-  totalTicketsScratched: number;
-  totalCasinoWins: number;
+  clickPower: number;
+  maxClickPower: number;
   
   // Collections
-  monstersCollection: Monster[];
   guillaumes: Guillaume[];
+  monstersCollection: Monster[];
   achievements: Achievement[];
   
   // Progression
-  clickPower: number;
-  passiveIncome: number;
+  currentBuilding: number;
+  scratchTickets: number;
   
-  // État des mini-jeux
-  casinoStats?: {
-    blackjackWins: number;
-    rouletteWins: number;
-    slotMachineWins: number;
-    totalBet: number;
-    biggestWin: number;
-  };
+  // Statistiques
+  totalMoneyEarned: number;
+  totalTicketsScratched: number;
+  totalCasinoWins: number;
+  totalCasinoLosses: number;
+  totalCasinoBet?: number;
+  biggestWin?: number;
   
-  // Dernière sauvegarde
-  lastSave?: number;
+  // Statistiques spécifiques aux jeux de casino
+  blackjackWins?: number;
+  rouletteWins?: number;
+  slotWins?: number;
   
-  // Version pour la compatibilité des sauvegardes
-  version?: string;
+  // Paramètres
+  settings: GameSettings;
 }
