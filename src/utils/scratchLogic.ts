@@ -1,193 +1,177 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  generateRandomMonster, 
-  calculateTicketPrice, 
-  getPriceInfo,
-  savePurchasesToStorage,
-  loadPurchasesFromStorage
-} from '../utils/game';
+import { Monster } from '../types/game';
+import { monstersData } from '../data/monsters';
 
-const MonsterShop = () => {
-  const [playerMoney, setPlayerMoney] = useState(2000);
-  const [totalPurchases, setTotalPurchases] = useState(0);
-  const [monsters, setMonsters] = useState([]);
-  const [lastMonster, setLastMonster] = useState(null);
-
-  // Charger le nombre d'achats depuis localStorage au démarrage
-  useEffect(() => {
-    const savedPurchases = loadPurchasesFromStorage();
-    setTotalPurchases(savedPurchases);
-  }, []);
-
-  // Sauvegarder le nombre d'achats à chaque changement
-  useEffect(() => {
-    savePurchasesToStorage(totalPurchases);
-  }, [totalPurchases]);
-
-  // Calculer les informations de prix actuelles
-  const priceInfo = getPriceInfo(totalPurchases);
-  const currentTicketPrice = calculateTicketPrice(totalPurchases);
-
-  const buyTicket = () => {
-    // Vérifier si le joueur a assez d'argent
-    if (playerMoney >= currentTicketPrice) {
-      // Déduire l'argent avec le prix actuel (pas fixe!)
-      setPlayerMoney(prev => prev - currentTicketPrice);
-      
-      // IMPORTANT: Incrémenter le compteur d'achats pour faire augmenter le prix
-      setTotalPurchases(prev => prev + 1);
-      
-      // Générer le nouveau monster
-      const newMonster = generateRandomMonster();
-      setMonsters(prev => [...prev, newMonster]);
-      setLastMonster(newMonster);
-      
-      console.log(`Ticket acheté pour ${currentTicketPrice} coins`);
-      console.log(`Prochain ticket coûtera ${getPriceInfo(totalPurchases + 1).currentPrice} coins`);
-    } else {
-      alert(`Pas assez d'argent ! Il vous faut ${currentTicketPrice} coins.`);
-    }
-  };
-
-  const resetGame = () => {
-    setPlayerMoney(2000);
-    setTotalPurchases(0);
-    setMonsters([]);
-    setLastMonster(null);
-    localStorage.removeItem('totalMonsterPurchases');
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-100 min-h-screen">
-      {/* Header avec informations du joueur */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h1 className="text-3xl font-bold text-center mb-4">🎰 Boutique de Monsters</h1>
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-xl">💰 Argent: <span className="font-bold text-green-600">{playerMoney} coins</span></p>
-            <p className="text-lg">📦 Achats totaux: <span className="font-bold">{totalPurchases}</span></p>
-          </div>
-          <button 
-            onClick={resetGame}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-          >
-            Reset Game
-          </button>
-        </div>
-      </div>
-
-      {/* Informations sur les prix */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-2xl font-semibold mb-4">💸 Évolution des Prix</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-blue-800">Prix Actuel</h3>
-            <p className="text-2xl font-bold text-blue-600">{priceInfo.currentPrice} coins</p>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-orange-800">Prochain Prix</h3>
-            <p className="text-2xl font-bold text-orange-600">{priceInfo.nextPrice} coins</p>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-purple-800">Augmentation</h3>
-            <p className="text-2xl font-bold text-purple-600">+{priceInfo.priceIncrease} coins</p>
-          </div>
-        </div>
-        
-        {priceInfo.isMaxPrice && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
-            <p className="text-red-700 font-semibold">🔴 Prix maximum atteint ! ({priceInfo.maxPrice} coins)</p>
-          </div>
-        )}
-        
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Prix de base: {priceInfo.basePrice} coins | Prix maximum: {priceInfo.maxPrice} coins</p>
-        </div>
-      </div>
-
-      {/* Bouton d'achat */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
-        <button 
-          onClick={buyTicket}
-          disabled={playerMoney < currentTicketPrice}
-          className={`
-            px-8 py-4 text-xl font-bold rounded-lg transition-all duration-200
-            ${playerMoney >= currentTicketPrice 
-              ? 'bg-green-500 hover:bg-green-600 text-white hover:scale-105' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }
-          `}
-        >
-          🎫 Acheter un Ticket ({currentTicketPrice} coins)
-        </button>
-        
-        {playerMoney < currentTicketPrice && (
-          <p className="mt-2 text-red-500">
-            Il vous manque {currentTicketPrice - playerMoney} coins !
-          </p>
-        )}
-      </div>
-
-      {/* Dernier monster obtenu */}
-      {lastMonster && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">🎉 Dernier Monster Obtenu</h2>
-          <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
-            <h3 className="text-xl font-bold">{lastMonster.name}</h3>
-            <p className="text-lg">Rareté: <span className="font-semibold">{lastMonster.rarity}</span></p>
-            <p>Prix de base: {lastMonster.basePrice} coins</p>
-          </div>
-        </div>
-      )}
-
-      {/* Collection de monsters */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-semibold mb-4">👹 Ma Collection ({monsters.length} monsters)</h2>
-        
-        {monsters.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Aucun monster dans votre collection. Achetez votre premier ticket !</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {monsters.map((monster, index) => (
-              <div 
-                key={index} 
-                className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <h3 className="font-bold text-lg">{monster.name}</h3>
-                <p className="text-sm text-gray-600">Rareté: {monster.rarity}</p>
-                <p className="text-sm text-gray-600">Prix: {monster.basePrice} coins</p>
-                <p className="text-xs text-gray-400">#{index + 1}</p>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {monsters.length > 0 && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold mb-2">📊 Statistiques de Collection</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <p className="text-gray-600">Communs</p>
-                <p className="font-bold">{monsters.filter(m => m.rarity === 'commun').length}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Rares</p>
-                <p className="font-bold text-blue-600">{monsters.filter(m => m.rarity === 'rare').length}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Épiques</p>
-                <p className="font-bold text-purple-600">{monsters.filter(m => m.rarity === 'épique').length}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Monstrueux</p>
-                <p className="font-bold text-red-600">{monsters.filter(m => m.rarity === 'monstrueux').length}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+// Probabilités d'obtenir chaque rareté
+const RARITY_CHANCES = {
+  commun: 0.60,     // 60%
+  rare: 0.25,       // 25%
+  épique: 0.12,     // 12%
+  monstrueux: 0.03  // 3%
 };
 
-export default MonsterShop;
+// Configuration du prix progressif
+const PRICE_CONFIG = {
+  basePrice: 500,           // Prix de base d'un ticket
+  priceIncrease: 50,        // Augmentation par achat
+  maxPriceMultiplier: 5     // Prix maximum = basePrice * maxPriceMultiplier
+};
+
+export function generateRandomMonster(): Monster {
+  const random = Math.random();
+  let rarity: 'commun' | 'rare' | 'épique' | 'monstrueux';
+     
+  if (random < RARITY_CHANCES.monstrueux) {
+    rarity = 'monstrueux';
+  } else if (random < RARITY_CHANCES.monstrueux + RARITY_CHANCES.épique) {
+    rarity = 'épique';
+  } else if (random < RARITY_CHANCES.monstrueux + RARITY_CHANCES.épique + RARITY_CHANCES.rare) {
+    rarity = 'rare';
+  } else {
+    rarity = 'commun';
+  }
+     
+  // Sélectionner un monster aléatoire de cette rareté
+  const monstersOfRarity = monstersData.filter(m => m.rarity === rarity);
+  const randomMonster = monstersOfRarity[Math.floor(Math.random() * monstersOfRarity.length)];
+     
+  return {
+    ...randomMonster,
+    currentPrice: randomMonster.basePrice,
+    obtained: 0
+  };
+}
+
+// Fonction principale pour calculer le prix actuel d'un ticket
+export function calculateTicketPrice(totalPurchases: number): number {
+  const increasedPrice = PRICE_CONFIG.basePrice + (totalPurchases * PRICE_CONFIG.priceIncrease);
+  const maxPrice = PRICE_CONFIG.basePrice * PRICE_CONFIG.maxPriceMultiplier;
+  
+  return Math.min(increasedPrice, maxPrice);
+}
+
+// Fonction pour obtenir le prix du prochain ticket
+export function getNextTicketPrice(totalPurchases: number): number {
+  return calculateTicketPrice(totalPurchases + 1);
+}
+
+// Fonction pour obtenir des informations complètes sur l'évolution des prix
+export function getPriceInfo(totalPurchases: number) {
+  const currentPrice = calculateTicketPrice(totalPurchases);
+  const nextPrice = calculateTicketPrice(totalPurchases + 1);
+  const maxPrice = PRICE_CONFIG.basePrice * PRICE_CONFIG.maxPriceMultiplier;
+  const isMaxPrice = currentPrice >= maxPrice;
+  
+  return {
+    currentPrice,
+    nextPrice: isMaxPrice ? maxPrice : nextPrice,
+    priceIncrease: isMaxPrice ? 0 : PRICE_CONFIG.priceIncrease,
+    isMaxPrice,
+    totalPurchases,
+    basePrice: PRICE_CONFIG.basePrice,
+    maxPrice
+  };
+}
+
+// Fonction utilitaire pour réinitialiser les prix (pour tests ou reset du jeu)
+export function resetPricing() {
+  return {
+    totalPurchases: 0,
+    currentPrice: PRICE_CONFIG.basePrice
+  };
+}
+
+// Prix de base pour référence (NE PLUS UTILISER DIRECTEMENT POUR LES ACHATS)
+export const TICKET_BASE_PRICE = PRICE_CONFIG.basePrice;
+
+// Fonction pour sauvegarder/charger le nombre d'achats (pour localStorage)
+export function savePurchasesToStorage(totalPurchases: number): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('totalMonsterPurchases', totalPurchases.toString());
+  }
+}
+
+export function loadPurchasesFromStorage(): number {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('totalMonsterPurchases');
+    return saved ? parseInt(saved, 10) : 0;
+  }
+  return 0;
+}
+
+// Casino utilities (inchangé)
+interface Card {
+  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+  value: number;
+  display: string;
+}
+
+export function createDeck(): Card[] {
+  const suits: Card['suit'][] = ['hearts', 'diamonds', 'clubs', 'spades'];
+  const deck: Card[] = [];
+     
+  for (const suit of suits) {
+    for (let value = 1; value <= 13; value++) {
+      let display = '';
+      if (value === 1) display = 'A';
+      else if (value === 11) display = 'J';
+      else if (value === 12) display = 'Q';
+      else if (value === 13) display = 'K';
+      else display = value.toString();
+             
+      deck.push({ suit, value, display });
+    }
+  }
+     
+  return shuffleDeck(deck);
+}
+
+export function shuffleDeck(deck: Card[]): Card[] {
+  const shuffled = [...deck];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+export function getCardValue(card: Card, aceAsEleven: boolean = true): number {
+  if (card.value === 1) return aceAsEleven ? 11 : 1;
+  if (card.value > 10) return 10;
+  return card.value;
+}
+
+export function calculateHandValue(cards: Card[]): { value: number; isBlackjack: boolean; isBust: boolean } {
+  let value = 0;
+  let aces = 0;
+     
+  for (const card of cards) {
+    if (card.value === 1) {
+      aces++;
+      value += 11;
+    } else if (card.value > 10) {
+      value += 10;
+    } else {
+      value += card.value;
+    }
+  }
+     
+  // Adjust for aces
+  while (value > 21 && aces > 0) {
+    value -= 10;
+    aces--;
+  }
+     
+  const isBlackjack = cards.length === 2 && value === 21;
+  const isBust = value > 21;
+     
+  return { value, isBlackjack, isBust };
+}
+
+export function getSuitSymbol(suit: Card['suit']): string {
+  switch (suit) {
+    case 'hearts': return '♥️';
+    case 'diamonds': return '♦️';
+    case 'clubs': return '♣️';
+    case 'spades': return '♠️';
+  }
+}
